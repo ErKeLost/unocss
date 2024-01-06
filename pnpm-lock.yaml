@@ -688,6 +688,12 @@ importers:
         specifier: workspace:*
         version: link:../core
 
+  packages/farm:
+    devDependencies:
+      unplugin-test:
+        specifier: ^2.0.0
+        version: 2.0.0
+
   packages/inspector:
     dependencies:
       '@unocss/core':
@@ -4610,6 +4616,7 @@ packages:
     dependencies:
       is-glob: 4.0.3
       micromatch: 4.0.5
+      napi-wasm: 1.1.0
     dev: true
     bundledDependencies:
       - napi-wasm
@@ -14928,6 +14935,10 @@ packages:
     dev: true
     optional: true
 
+  /napi-wasm@1.1.0:
+    resolution: {integrity: sha512-lHwIAJbmLSjF9VDRm9GoVOy9AGp3aIvkjv+Kvz9h16QR3uSVYH78PNQUnT2U4X53mhlnV2M7wrhibQ3GHicDmg==}
+    dev: true
+
   /natural-compare-lite@1.4.0:
     resolution: {integrity: sha512-Tj+HTDSJJKaZnfiuw+iaF9skdPpTo2GtEly5JHnWV/hfv2Qj/9RKsGISQtLh2ox3l5EAGw487hnBee0sIJ6v2g==}
     dev: true
@@ -20322,6 +20333,15 @@ packages:
       unplugin: 1.6.0
     transitivePeerDependencies:
       - rollup
+    dev: true
+
+  /unplugin-test@2.0.0:
+    resolution: {integrity: sha512-lSYp8mgMCpLi9tQ3+7TLn/9EBP0Lu0mD05iJnMwU633d4iazmkg2u4qd8th+HugqOg3Q1A3RD1beX7PnTrrZ3A==}
+    dependencies:
+      acorn: 8.11.2
+      chokidar: 3.5.3
+      webpack-sources: 3.2.3
+      webpack-virtual-modules: 0.6.1
     dev: true
 
   /unplugin-vue-components@0.26.0(rollup@4.9.1)(vue@3.3.9):
