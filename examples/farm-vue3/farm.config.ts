@@ -11,6 +11,9 @@ import { FileSystemIconLoader } from '@iconify/utils/lib/loader/node-loaders'
 const iconDirectory = resolve(process.cwd(), 'icons')
 
 export default defineConfig({
+  compilation: {
+    persistentCache: false,
+  },
   vitePlugins: [
     vue(),
   ],

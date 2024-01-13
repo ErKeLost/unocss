@@ -40,16 +40,16 @@ export default function UnocssPlugin<Theme extends object>(
   const mode = inlineConfig.mode ?? 'global'
 
   const plugins = [
-    ConfigHMRPlugin(ctx),
-    ...createTransformerPlugins(ctx),
-    ...createDevtoolsPlugin(ctx, inlineConfig),
-    {
-      name: 'unocss:api',
-      api: <UnocssVitePluginAPI>{
-        getContext: () => ctx,
-        getMode: () => mode,
-      },
-    },
+    // ConfigHMRPlugin(ctx),
+    // ...createTransformerPlugins(ctx),
+    // ...createDevtoolsPlugin(ctx, inlineConfig),
+    // {
+    //   name: 'unocss:api',
+    //   api: <UnocssVitePluginAPI>{
+    //     getContext: () => ctx,
+    //     getMode: () => mode,
+    //   },
+    // },
   ]
 
   if (inlineConfig.inspector !== false)

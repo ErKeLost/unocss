@@ -25,7 +25,7 @@ export function defineConfig<Theme extends object>(config: WebpackPluginOptions<
   return config
 }
 
-export default function WebpackPlugin<Theme extends object>(
+export default function FarmPlugin<Theme extends object>(
   configOrPath?: WebpackPluginOptions<Theme> | string,
   defaults?: UserConfigDefaults,
 ) {
@@ -99,6 +99,40 @@ export default function WebpackPlugin<Theme extends object>(
         const hash = hashes.get(id)
         if (layer)
           return (hash ? getHashPlaceholder(hash) : '') + getLayerPlaceholder(layer)
+      },
+      farm: {
+        renderResourcePot: {
+          async executor(params) {
+            await flushTasks()
+            const result = await uno.generate(tokens, { minify: true })
+            let code = params.content
+            let replaced = false
+            code = code.replace(HASH_PLACEHOLDER_RE, '')
+            code = code.replace(LAYER_PLACEHOLDER_RE, (_, quote, layer) => {
+              replaced = true
+              const css = layer === LAYER_MARK_ALL
+                ? result.getLayers(undefined, Array.from(entries)
+                  .map(i => resolveLayer(i)).filter((i): i is string => !!i))
+                : (result.getLayer(layer) || '')
+
+              if (!quote)
+                return css
+
+              // the css is in a js file, escaping
+              let escaped = JSON.stringify(css).slice(1, -1)
+              // in `eval()`, escaping twice
+              if (quote === '\\"')
+                escaped = JSON.stringify(escaped).slice(1, -1)
+              return quote + escaped
+            })
+            if (replaced) {
+              return {
+                content: code,
+                sourcemap: '',
+              }
+            }
+          },
+        },
       },
       webpack(compiler) {
         // replace the placeholders

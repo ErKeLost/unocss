@@ -11,8 +11,8 @@
     "vue": "^3.3.9"
   },
   "devDependencies": {
-    "@farmfe/cli": "0.5.11",
-    "@farmfe/core": "0.14.18",
+    "@farmfe/cli": "0.6.0",
+    "@farmfe/core": "0.15.3",
     "@iconify-json/logos": "^1.1.42",
     "@unocss/core": "link:../../packages/core",
     "@unocss/farm": "link:../../packages/farm",
