@@ -712,8 +712,8 @@ importers:
         specifier: latest
         version: 0.30.5
       unplugin-test:
-        specifier: ^2.0.2
-        version: 2.0.2
+        specifier: ^2.0.8
+        version: 2.0.8
     devDependencies:
       '@farmfe/cli':
         specifier: ^0.5.11
@@ -20792,8 +20792,8 @@ packages:
       - rollup
     dev: true
 
-  /unplugin-test@2.0.2:
-    resolution: {integrity: sha512-xi4DhGMmGNUOkDiQ1s+Ew6MtyGzk42hiN1Y/pzWxjWSpK9/8WVmB2fRXkAX65QMfit++OOXqQgK1rLBgHQq2sA==}
+  /unplugin-test@2.0.8:
+    resolution: {integrity: sha512-7vEi8BD7j4NP/7PvMBX9hYcqUmbPeisP0U7lWVHTvcr5y/iFFCU5daXSToRyS2tYlfzhHQNvsF0iKFnMpFZ4bg==}
     dependencies:
       acorn: 8.11.2
       chokidar: 3.5.3

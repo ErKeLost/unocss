@@ -46,7 +46,7 @@
     "chokidar": "^3.5.3",
     "fast-glob": "^3.3.2",
     "magic-string": "^0.30.5",
-    "unplugin-test": "^2.0.2"
+    "unplugin-test": "^2.0.8"
   },
   "devDependencies": {
     "@farmfe/cli": "^0.5.11",
