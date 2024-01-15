@@ -37,7 +37,7 @@
 //       envMode: process.env.NODE_ENV === 'development' ? 'dev' : 'build',
 //       ...defaults,
 //     })
-//     const { uno, tokens, filter, extract,affectedModules, onInvalidate, tasks, flushTasks } = ctx
+//     const { uno, tokens, filter, extract, affectedModules, onInvalidate, tasks, flushTasks } = ctx
 //     const servers: any[] = []
 //     const entries = new Set<string>()
 //     let invalidateTimer: any
@@ -69,14 +69,12 @@
 
 //     function invalidate(timer = 10, ids: Set<string> = entries) {
 //       for (const server of servers) {
-//         for (const id of ids) {
-//           console.log(id);
+//         for (const id of ids)
 
-//           // const mod = server.viteModuleGraph.getModuleById(id)
-//           // if (!mod)
-//           //   continue
-//           // server!.moduleGraph.invalidateModule(mod)
-//         }
+//         // const mod = server.viteModuleGraph.getModuleById(id)
+//         // if (!mod)
+//         //   continue
+//         // server!.moduleGraph.invalidateModule(mod)
 //       }
 //       clearTimeout(invalidateTimer)
 //       invalidateTimer = setTimeout(() => {
@@ -181,6 +179,13 @@
 //             if (lastServedHash.get(layer) !== preHash)
 //               sendUpdate(entries)
 //           })
+//         },
+//         updateModules: {
+//           async executor(params) {
+//             // await flushTasks()
+//             // invalidate()
+//             console.log(params)
+//           },
 //         },
 //         renderResourcePot: {
 //           async executor(params: any) {
