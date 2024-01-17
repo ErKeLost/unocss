@@ -66,10 +66,11 @@
 //       lastServedTime = Date.now()
 //       return { hash, css }
 //     }
+//     let timer: any
 
 //     function invalidate(timer = 10, ids: Set<string> = entries) {
 //       for (const server of servers) {
-//         for (const id of ids)
+//         // for (const id of ids)
 
 //         // const mod = server.viteModuleGraph.getModuleById(id)
 //         // if (!mod)
@@ -86,29 +87,24 @@
 //     function sendUpdate(ids: Set<string>) {
 //       for (const server of servers) {
 //         server.ws.send({
-//           type: 'update',
+//           type: 'farm-update',
 //           updates: Array.from(ids)
-//             // .map((id) => {
-//             //   const mod = server.moduleGraph.getModuleById(id)
-//             //   if (!mod)
-//             //     return null
-//             //   return {
-//             //     acceptedPath: mod.url,
-//             //     path: mod.url,
-//             //     timestamp: lastServedTime,
-//             //     type: 'js-update',
-//             //   }
-//             // })
+//             .map((id) => {
+//               // const mod = server.moduleGraph.getModuleById(id)
+//               // if (!mod)
+//                 // return null
+//               return {
+//                 acceptedPath: id,
+//                 path: id,
+//                 timestamp: lastServedTime,
+//                 type: 'js-update',
+//               }
+//             })
 //             .filter(notNull),
 //         })
 //       }
 //     }
 
-//     let timer: any
-//     // onInvalidate(() => {
-//     //   clearTimeout(timer)
-//     //   timer = setTimeout(updateModules, UPDATE_DEBOUNCE)
-//     // })
 //     onInvalidate(() => {
 //       invalidate(10, new Set([...entries, ...affectedModules]))
 //     })
@@ -173,20 +169,20 @@
 //       farm: {
 //         async configureDevServer(_server) {
 //           servers.push(_server)
-//           _server.ws.on(WS_EVENT_PREFIX, async ([layer]: string[]) => {
-//             const preHash = lastServedHash.get(layer)
-//             await generateCSS(layer)
-//             if (lastServedHash.get(layer) !== preHash)
-//               sendUpdate(entries)
-//           })
+//           // _server.ws.on(WS_EVENT_PREFIX, async ([layer]: string[]) => {
+//           //   const preHash = lastServedHash.get(layer)
+//           //   await generateCSS(layer)
+//           //   if (lastServedHash.get(layer) !== preHash)
+//           //     sendUpdate(entries)
+//           // })
 //         },
-//         updateModules: {
-//           async executor(params) {
-//             // await flushTasks()
-//             // invalidate()
-//             console.log(params)
-//           },
-//         },
+//         // updateModules: {
+//         //   async executor(params) {
+//         //     // await flushTasks()
+//         //     // invalidate()
+//         //     // console.log(params)
+//         //   },
+//         // },
 //         renderResourcePot: {
 //           async executor(params: any) {
 //             await flushTasks()

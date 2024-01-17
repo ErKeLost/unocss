@@ -2,6 +2,7 @@
   <div text-center font-sans p4>
     <div logo />
     <div text-blue text-lg>
+      123
       Hello UnoCSS + Vue asdasd asda asdasdas
     </div>
     <div i-custom-icon />
