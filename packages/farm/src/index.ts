@@ -87,15 +87,21 @@
 //     function sendUpdate(ids: Set<string>) {
 //       for (const server of servers) {
 //         server.ws.send({
-//           type: 'farm-update',
+//           type: 'update',
 //           updates: Array.from(ids)
 //             .map((id) => {
+//               console.log({
+//                 acceptedPath: resolveId(id),
+//                 path: resolveId(id),
+//                 timestamp: lastServedTime,
+//                 type: 'js-update',
+//               })
 //               // const mod = server.moduleGraph.getModuleById(id)
 //               // if (!mod)
-//                 // return null
+//               // return null
 //               return {
-//                 acceptedPath: id,
-//                 path: id,
+//                 acceptedPath: resolveId(id),
+//                 path: resolveId(id),
 //                 timestamp: lastServedTime,
 //                 type: 'js-update',
 //               }
@@ -142,17 +148,26 @@
 //         return result
 //       },
 //       resolveId(id) {
+//         // const entry = resolveId(id)
+
+//         // if (entry === id)
+//         //   return
+//         // if (entry) {
+//         //   let query = ''
+//         //   const queryIndex = id.indexOf('?')
+//         //   if (queryIndex >= 0)
+//         //     query = id.slice(queryIndex)
+//         //   entries.add(entry)
+//         //   console.log('resolveId', entry, id);
+
+//         //   return entry + query
+//         // }
 //         const entry = resolveId(id)
-//         if (entry === id)
-//           return
 //         if (entry) {
-//           let query = ''
-//           const queryIndex = id.indexOf('?')
-//           if (queryIndex >= 0)
-//             query = id.slice(queryIndex)
 //           entries.add(entry)
-//           // preserve the input query
-//           return entry + query
+//           console.log(entry);
+
+//           return entry
 //         }
 //       },
 //       loadInclude(id) {
