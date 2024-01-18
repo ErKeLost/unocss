@@ -3,7 +3,7 @@
     <div logo />
     <div text-blue text-lg>
       123
-      Hello UnoCSS + Vue asdasd asda asdasdas
+      Hello UnoCSS + Vue das
     </div>
     <div i-custom-icon />
     <div i-custom-multi-line-attr />

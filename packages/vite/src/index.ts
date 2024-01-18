@@ -80,6 +80,5 @@ export default function UnocssPlugin<Theme extends object>(
   else {
     throw new Error(`[unocss] unknown mode "${mode}"`)
   }
-
   return plugins.filter(Boolean) as Plugin[]
 }

@@ -43,13 +43,16 @@
     "@rollup/pluginutils": "^5.1.0",
     "@unocss/config": "workspace:*",
     "@unocss/core": "workspace:*",
+    "@unocss/inspector": "workspace:*",
+    "@unocss/scope": "workspace:*",
+    "@unocss/transformer-directives": "workspace:*",
     "chokidar": "^3.5.3",
     "fast-glob": "^3.3.2",
-    "magic-string": "^0.30.5",
-    "unplugin-test": "^2.0.8"
+    "magic-string": "^0.30.5"
   },
   "devDependencies": {
-    "@farmfe/cli": "^0.5.11",
-    "@farmfe/core": "^0.14.18"
+    "@farmfe/cli": "^0.6.0",
+    "@farmfe/core": "^0.15.6",
+    "@unocss/shared-integration": "workspace:*"
   }
 }

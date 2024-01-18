@@ -1,9 +1,11 @@
 /* eslint-disable no-console */
 import process from 'node:process'
+import * as querystring from 'node:querystring'
 import type { Plugin, Update, ViteDevServer } from 'vite'
 import type { GenerateResult, UnocssPluginContext } from '@unocss/core'
 import { notNull } from '@unocss/core'
 import MagicString from 'magic-string'
+import type { JsPlugin } from '@farmfe/core'
 import type { VitePluginConfig } from '../../types'
 import { LAYER_MARK_ALL, getHash, getPath, resolveId, resolveLayer } from '../../integration'
 
@@ -11,7 +13,7 @@ const WARN_TIMEOUT = 20000
 const WS_EVENT_PREFIX = 'unocss:hmr'
 const HASH_LENGTH = 6
 
-export function GlobalModeDevPlugin({ uno, tokens, tasks, flushTasks, affectedModules, onInvalidate, extract, filter, getConfig }: UnocssPluginContext): Plugin[] {
+export function GlobalModeDevPlugin({ uno, tokens, tasks, flushTasks, affectedModules, onInvalidate, extract, filter, getConfig }: UnocssPluginContext): JsPlugin[] {
   const servers: ViteDevServer[] = []
   const entries = new Set<string>()
   console.log(getConfig)
@@ -46,14 +48,14 @@ export function GlobalModeDevPlugin({ uno, tokens, tasks, flushTasks, affectedMo
   }
 
   function invalidate(timer = 10, ids: Set<string> = entries) {
-    for (const server of servers) {
-      for (const id of ids) {
-        const mod = server.moduleGraph.getModuleById(id)
-        if (!mod)
-          continue
-        server!.moduleGraph.invalidateModule(mod)
-      }
-    }
+    // for (const server of servers) {
+    //   for (const id of ids) {
+    //     const mod = server.moduleGraph.getModuleById(id)
+    //     if (!mod)
+    //       continue
+    //     server!.moduleGraph.invalidateModule(mod)
+    //   }
+    // }
     clearTimeout(invalidateTimer)
     invalidateTimer = setTimeout(() => {
       lastServedHash.clear()
@@ -67,12 +69,12 @@ export function GlobalModeDevPlugin({ uno, tokens, tasks, flushTasks, affectedMo
         type: 'update',
         updates: Array.from(ids)
           .map((id) => {
-            const mod = server.moduleGraph.getModuleById(id)
-            if (!mod)
-              return null
+            // const mod = server.moduleGraph.getModuleById(id)
+            // if (!mod)
+            //   return null
             return {
-              acceptedPath: mod.url,
-              path: mod.url,
+              acceptedPath: id,
+              path: id,
               timestamp: lastServedTime,
               type: 'js-update',
             } as Update
@@ -113,49 +115,31 @@ export function GlobalModeDevPlugin({ uno, tokens, tasks, flushTasks, affectedMo
   return [
     {
       name: 'unocss:global',
-      apply: 'serve',
-      enforce: 'pre',
-      async configureServer(_server) {
+      priority: 100,
+      async configureDevServer(_server) {
         servers.push(_server)
 
         _server.ws.on(WS_EVENT_PREFIX, async ([layer]: string[]) => {
-          console.log(layer)
-
           const preHash = lastServedHash.get(layer)
           await generateCSS(layer)
           if (lastServedHash.get(layer) !== preHash)
             sendUpdate(entries)
         })
       },
-      // buildStart() {
-      //   // warm up for preflights
-      //   uno.generate([], { preflights: true })
-      // },
-      resolveId(id) {
-        const entry = resolveId(id)
-        if (entry) {
-          resolved = true
-          clearWarnTimer()
-          entries.add(entry)
-          return entry
-        }
+      buildStart: {
+        // warm up for preflights
+        executor() {
+          uno.generate([], { preflights: true })
+        },
       },
-      async load(id) {
-        const layer = resolveLayer(getPath(id))
-        if (!layer)
-          return null
+      transform: {
+        filters: { resolvedPaths: ['.*'], moduleTypes: ['.*'] },
+        async executor(params) {
+          if (filter(params.content, params.resolvedPath))
+            tasks.push(extract(params.content, params.resolvedPath))
 
-        const { hash, css } = await generateCSS(layer)
-        return {
-          // add hash to the chunk of CSS that it will send back to client to check if there is new CSS generated
-          code: `__uno_hash_${hash}{--:'';}${css}`,
-          map: { mappings: '' },
-        }
-      },
-      transform(code, id) {
-        if (filter(code, id))
-          tasks.push(extract(code, id))
-        return null
+          return null
+        },
       },
       // transformIndexHtml: {
       //   order: 'pre',
@@ -170,8 +154,67 @@ export function GlobalModeDevPlugin({ uno, tokens, tasks, flushTasks, affectedMo
       //     tasks.push(extract(code, filename))
       //   },
       // },
+      resolve: {
+        filters: { sources: ['.*'], importers: ['.*'] },
+        executor(params) {
+          const id = params.source
+          const entry = resolveId(id)
 
-      // closeBundle() {
+          if (entry) {
+            resolved = true
+            clearWarnTimer()
+
+            entries.add(entry)
+
+            return {
+              resolvedPath: entry,
+              query: customParseQueryString(entry),
+              sideEffects: false,
+              external: false,
+              meta: {},
+            }
+          }
+        },
+      },
+      // resolveId(id) {
+      //   const entry = resolveId(id)
+      //   if (entry) {
+      //     resolved = true
+      //     clearWarnTimer()
+      //     entries.add(entry)
+      //     return entry
+      //   }
+      // },
+      load: {
+        filters: {
+          resolvedPaths: ['.*'],
+        },
+        async executor(params) {
+          const layer = resolveLayer(getPath(params.resolvedPath))
+          if (!layer)
+            return null
+          const { hash, css } = await generateCSS(layer)
+
+          return {
+            // add hash to the chunk of CSS that it will send back to client to check if there is new CSS generated
+            content: `__uno_hash_${hash}{--:'';}${css}`,
+            moduleType: 'js',
+          }
+        },
+      },
+      // async load(id) {
+      // const layer = resolveLayer(getPath(id))
+      // if (!layer)
+      //   return null
+
+      // const { hash, css } = await generateCSS(layer)
+      // return {
+      //   // add hash to the chunk of CSS that it will send back to client to check if there is new CSS generated
+      //   code: `__uno_hash_${hash}{--:'';}${css}`,
+      //   map: { mappings: '' },
+      // }
+      // },
+      // finish() {
       //   clearWarnTimer()
       // },
     },
@@ -217,4 +260,19 @@ export function GlobalModeDevPlugin({ uno, tokens, tasks, flushTasks, affectedMo
     //       },
     //     },
   ]
+}
+
+export function customParseQueryString(url: string | null) {
+  if (!url)
+    return []
+
+  const queryString = url.split('?')[1]
+
+  const parsedParams = querystring.parse(queryString)
+  const paramsArray = []
+
+  for (const key in parsedParams)
+    paramsArray.push([key, parsedParams[key]])
+
+  return paramsArray
 }

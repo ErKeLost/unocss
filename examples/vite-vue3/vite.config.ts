@@ -11,6 +11,9 @@ const iconDirectory = resolve(__dirname, 'icons')
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  server: {
+    port: 9852,
+  },
   plugins: [
     Vue(),
     UnoCSS({
