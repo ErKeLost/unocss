@@ -4,24 +4,26 @@
 // import type { Plugin, Update, ViteDevServer } from 'vite'
 // import type { GenerateResult, UnocssPluginContext } from '@unocss/core'
 // import { notNull } from '@unocss/core'
-// import MagicString from 'magic-string'
+
+// // import MagicString from 'magic-string'
 // import type { JsPlugin } from '@farmfe/core'
-// import type { VitePluginConfig } from '../../types'
-// import { LAYER_MARK_ALL, getLayerPlaceholder, getHash, getPath, resolveId, resolveLayer } from '../../integration'
+
+// // import type { VitePluginConfig } from '../../types'
+// import { LAYER_MARK_ALL, getHash, getLayerPlaceholder, getPath, resolveId, resolveLayer } from '../../integration'
 
 // const WARN_TIMEOUT = 20000
-// const WS_EVENT_PREFIX = 'unocss:hmr'
+// // const WS_EVENT_PREFIX = 'unocss:hmr'
 // const HASH_LENGTH = 6
 
 // export function GlobalModeDevPlugin({ uno, tokens, getConfig, tasks, flushTasks, affectedModules, onInvalidate, extract, filter }: UnocssPluginContext): JsPlugin[] {
 //   const servers: any[] = []
 //   const entries = new Set<string>()
-//   const cssPostPlugins = new Map<string | undefined, Plugin | undefined>()
+//   // const cssPostPlugins = new Map<string | undefined, Plugin | undefined>()
 //   const cssPlugins = new Map<string | undefined, Plugin | undefined>()
 //   let invalidateTimer: any
 //   const lastServedHash = new Map<string, string>()
 //   let lastServedTime = Date.now()
-//   let resolved = false
+//   // let resolved = false
 //   let resolvedWarnTimer: any
 //   const vfsLayers = new Set<string>()
 //   const layerImporterMap = new Map<string, string>()
@@ -181,7 +183,7 @@
 //       // },
 
 //       resolve: {
-//         filters: { sources: ['.*'], importers: ['.*'] },
+//         filters: { sources: ['uno.css'], importers: ['.*'] },
 //         executor(params) {
 //           const id = params.source
 //           const entry = resolveId(id)
