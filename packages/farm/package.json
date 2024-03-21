@@ -48,11 +48,12 @@
     "@unocss/transformer-directives": "workspace:*",
     "chokidar": "^3.5.3",
     "fast-glob": "^3.3.2",
-    "magic-string": "^0.30.5"
+    "magic-string": "^0.30.5",
+    "unplugin": "^1.10.0"
   },
   "devDependencies": {
-    "@farmfe/cli": "^0.6.0",
-    "@farmfe/core": "^0.15.6",
+    "@farmfe/cli": "^1.0.0",
+    "@farmfe/core": "^1.0.2",
     "@unocss/shared-integration": "workspace:*"
   }
 }

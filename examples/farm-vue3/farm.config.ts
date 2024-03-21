@@ -1,7 +1,7 @@
 import { resolve } from 'node:path'
 import { defineConfig } from '@farmfe/core'
 import vue from '@vitejs/plugin-vue'
-import UnoCSS from '@unocss/vite'
+import UnoCSS from '@unocss/farm'
 import presetAttributify from '@unocss/preset-attributify'
 import presetIcons from '@unocss/preset-icons'
 import presetUno from '@unocss/preset-uno'
@@ -16,6 +16,8 @@ export default defineConfig({
   },
   vitePlugins: [
     vue(),
+  ],
+  plugins: [
     UnoCSS({
       shortcuts: [
         { logo: 'i-logos-vue w-6em h-6em transform transition-800' },
@@ -34,9 +36,5 @@ export default defineConfig({
         }),
       ],
     }),
-  ],
-  plugins: [
-    // UnoCSS()
-
   ],
 })

@@ -165,7 +165,7 @@
 //           tasks.length = 0
 //           lastTokenSize = 0
 //           lastResult = undefined
-//           // uno.generate([], { preflights: true })
+//           uno.generate([], { preflights: true })
 //         },
 //       },
 //       // transformIndexHtml: {
