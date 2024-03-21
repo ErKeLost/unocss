@@ -1,4 +1,5 @@
 import process from 'node:process'
+import { isAbsolute, normalize } from 'node:path'
 import type { UserConfig, UserConfigDefaults } from '@unocss/core'
 import type { ResolvedUnpluginOptions, UnpluginOptions } from 'unplugin'
 import { createUnplugin } from 'unplugin'
@@ -6,7 +7,17 @@ import WebpackSources from 'webpack-sources'
 import { createContext } from '../../shared-integration/src/context'
 import { setupContentExtractor } from '../../shared-integration/src/content'
 import { getHash } from '../../shared-integration/src/hash'
-import { HASH_PLACEHOLDER_RE, LAYER_MARK_ALL, LAYER_PLACEHOLDER_RE, RESOLVED_ID_RE, getHashPlaceholder, getLayerPlaceholder, resolveId, resolveLayer } from '../../shared-integration/src/layers'
+import {
+  HASH_PLACEHOLDER_RE,
+  LAYER_MARK_ALL,
+  LAYER_PLACEHOLDER_RE,
+  RESOLVED_ID_RE,
+  getCssEscaperForJsContent,
+  getHashPlaceholder,
+  getLayerPlaceholder,
+  resolveId,
+  resolveLayer,
+} from '../../shared-integration/src/layers'
 import { applyTransformers } from '../../shared-integration/src/transformers'
 import { getPath, isCssId } from '../../shared-integration/src/utils'
 
@@ -103,7 +114,11 @@ export default function WebpackPlugin<Theme extends object>(
       webpack(compiler) {
         // replace the placeholders
         compiler.hooks.compilation.tap(PLUGIN_NAME, (compilation) => {
-          compilation.hooks.optimizeAssets.tapPromise(PLUGIN_NAME, async () => {
+          const optimizeAssetsHook
+          = /* webpack 5 & 6 */ compilation.hooks.processAssets
+          || /* webpack 4 */ compilation.hooks.optimizeAssets
+
+          optimizeAssetsHook.tapPromise(PLUGIN_NAME, async () => {
             const files = Object.keys(compilation.assets)
 
             await flushTasks()
@@ -117,22 +132,16 @@ export default function WebpackPlugin<Theme extends object>(
               let code = compilation.assets[file].source().toString()
               let replaced = false
               code = code.replace(HASH_PLACEHOLDER_RE, '')
-              code = code.replace(LAYER_PLACEHOLDER_RE, (_, quote, layer) => {
+              code = code.replace(LAYER_PLACEHOLDER_RE, (_, layer, escapeView) => {
                 replaced = true
                 const css = layer === LAYER_MARK_ALL
                   ? result.getLayers(undefined, Array.from(entries)
                     .map(i => resolveLayer(i)).filter((i): i is string => !!i))
                   : (result.getLayer(layer) || '')
 
-                if (!quote)
-                  return css
+                const escapeCss = getCssEscaperForJsContent(escapeView)
 
-                // the css is in a js file, escaping
-                let escaped = JSON.stringify(css).slice(1, -1)
-                // in `eval()`, escaping twice
-                if (quote === '\\"')
-                  escaped = JSON.stringify(escaped).slice(1, -1)
-                return quote + escaped
+                return escapeCss(css)
               })
               if (replaced)
                 compilation.assets[file] = new WebpackSources.RawSource(code) as any
@@ -155,7 +164,10 @@ export default function WebpackPlugin<Theme extends object>(
       lastTokenSize = tokens.size
       Array.from(plugin.__vfsModules)
         .forEach((id) => {
-          const path = decodeURIComponent(id.slice(plugin.__virtualModulePrefix.length))
+          let path = decodeURIComponent(id.slice(plugin.__virtualModulePrefix.length))
+          // unplugin changes the id in the `load` hook, follow it
+          // https://github.com/unjs/unplugin/pull/145/files#diff-2b106437404a793ee5b8f3823344656ce880f698d3d8cb6a7cf785e36fb4bf5cR27
+          path = normalizeAbsolutePath(path)
           const layer = resolveLayer(path)
           if (!layer)
             return
@@ -181,4 +193,12 @@ function getLayer(id: string) {
       layer = resolveLayer(entry)
   }
   return layer
+}
+
+// https://github.com/unjs/unplugin/pull/145/files#diff-39b2554fd18da165b59a6351b1aafff3714e2a80c1435f2de9706355b4d32351R13-R19
+function normalizeAbsolutePath(path: string) {
+  if (isAbsolute(path))
+    return normalize(path)
+  else
+    return path
 }

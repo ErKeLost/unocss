@@ -1,12 +1,12 @@
 import { readFile } from 'node:fs/promises'
-import { describe, expect, it } from 'vitest'
-import { transformDirectives } from '@unocss/transformer-directives'
 import type { UnoGenerator } from '@unocss/core'
 import { createGenerator } from '@unocss/core'
 import presetUno from '@unocss/preset-uno'
-import prettier from 'prettier/standalone'
-import parserCSS from 'prettier/parser-postcss'
+import { transformDirectives } from '@unocss/transformer-directives'
 import MagicString from 'magic-string'
+import parserCSS from 'prettier/parser-postcss'
+import prettier from 'prettier/standalone'
+import { describe, expect, it } from 'vitest'
 
 describe('transformer-directives', () => {
   const uno = createGenerator({
@@ -34,6 +34,19 @@ describe('transformer-directives', () => {
         xxl: '1536px',
       },
     },
+    variants: [
+      (matcher) => {
+        const prefix = 'sgroup:' // selector group
+
+        if (!matcher.startsWith(prefix))
+          return matcher
+
+        return {
+          matcher: matcher.slice(prefix.length),
+          selector: s => `${s}:hover, ${s}:focus`,
+        }
+      },
+    ],
   })
 
   async function transform(code: string, _uno: UnoGenerator = uno) {
@@ -47,7 +60,10 @@ describe('transformer-directives', () => {
 
   it('basic', async () => {
     const result = await transform(
-      '.btn { @apply rounded text-lg font-mono; }',
+      `.btn {
+        @apply rounded text-lg;
+        @apply 'font-mono';
+      }`,
     )
     await expect(result)
       .toMatchInlineSnapshot(`
@@ -525,6 +541,23 @@ div {
           50% {
             opacity: 0.5;
           }
+        }
+        "
+      `)
+  })
+
+  it('@apply selector group', async () => {
+    const result = await transform(
+      '.btn { @apply: sgroup:bg-orange }',
+    )
+    expect(result)
+      .toMatchInlineSnapshot(`
+        ".btn {
+        }
+        .btn:hover,
+        .btn:focus {
+          --un-bg-opacity: 1;
+          background-color: rgb(251 146 60 / var(--un-bg-opacity));
         }
         "
       `)

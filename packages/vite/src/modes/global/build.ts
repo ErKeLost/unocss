@@ -252,7 +252,7 @@ export function GlobalModeBuildPlugin(ctx: UnocssPluginContext<VitePluginConfig>
           // to replace on current build pipeline, we can skip the warning.
           if (replaced)
             return
-          const msg = '[unocss] entry module not found, have you add `import \'uno.css\'` in your main entry?'
+          const msg = '[unocss] Entry module not found. Did you add `import \'uno.css\'` in your main entry?'
           this.warn(msg)
           return
         }
@@ -273,7 +273,7 @@ export function GlobalModeBuildPlugin(ctx: UnocssPluginContext<VitePluginConfig>
           if (chunk.type === 'asset' && typeof chunk.source === 'string') {
             const css = chunk.source
               .replace(HASH_PLACEHOLDER_RE, '')
-            chunk.source = await replaceAsync(css, LAYER_PLACEHOLDER_RE, async (_, __, layer) => {
+            chunk.source = await replaceAsync(css, LAYER_PLACEHOLDER_RE, async (_, layer) => {
               replaced = true
               return getLayer(layer, css)
             })
@@ -284,7 +284,7 @@ export function GlobalModeBuildPlugin(ctx: UnocssPluginContext<VitePluginConfig>
           else if (chunk.type === 'chunk' && typeof chunk.code === 'string') {
             const js = chunk.code
               .replace(HASH_PLACEHOLDER_RE, '')
-            chunk.code = await replaceAsync(js, LAYER_PLACEHOLDER_RE, async (_, __, layer) => {
+            chunk.code = await replaceAsync(js, LAYER_PLACEHOLDER_RE, async (_, layer) => {
               replaced = true
               const css = getLayer(layer, js)
               return css

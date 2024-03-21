@@ -1,6 +1,6 @@
 {
   "name": "@unocss/eslint-plugin",
-  "version": "0.58.3",
+  "version": "0.58.6",
   "description": "ESLint plugin for UnoCSS",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -39,13 +39,14 @@
     "lint": "nr build && cd ./fixtures && eslint ./src"
   },
   "dependencies": {
-    "@typescript-eslint/utils": "^6.16.0",
+    "@typescript-eslint/utils": "^7.2.0",
     "@unocss/config": "workspace:*",
     "@unocss/core": "workspace:*",
-    "magic-string": "^0.30.5",
-    "synckit": "^0.8.8"
+    "magic-string": "^0.30.8",
+    "synckit": "^0.9.0"
   },
   "devDependencies": {
-    "@unocss/eslint-plugin": "workspace:*"
+    "@unocss/eslint-plugin": "workspace:*",
+    "vue-eslint-parser": "^9.4.2"
   }
 }
