@@ -144,5 +144,12 @@
       "vite": "^5.2.9",
       "which-typed-array": "npm:@nolyfill/which-typed-array@latest"
     }
+  },
+  "simple-git-hooks": {
+    "pre-commit": "npx esno scripts/prepare.ts && npx lint-staged"
+  },
+  "lint-staged": {
+    "*.{js,ts,tsx,vue,md}": [
+    ]
   }
 }
