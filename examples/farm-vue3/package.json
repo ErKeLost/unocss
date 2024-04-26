@@ -1,0 +1,29 @@
+{
+  "name": "vite-vue3",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "farm start",
+    "build": "farm build",
+    "preview": "farm preview"
+  },
+  "dependencies": {
+    "vue": "^3.3.9"
+  },
+  "devDependencies": {
+    "@farmfe/cli": "1.0.0",
+    "@farmfe/core": "1.1.1",
+    "@iconify-json/logos": "^1.1.42",
+    "@unocss/core": "link:../../packages/core",
+    "@unocss/farm": "link:../../packages/farm",
+    "@unocss/preset-attributify": "link:../../packages/preset-attributify",
+    "@unocss/preset-icons": "link:../../packages/preset-icons",
+    "@vitejs/plugin-vue": "^5.0.0",
+    "typescript": "^5.3.3",
+    "unocss": "link:../../packages/unocss"
+  },
+  "stackblitz": {
+    "installDependencies": false,
+    "startCommand": "node .stackblitz.js && npm install && npm run dev"
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "name": "@unocss/farm",
+  "version": "0.0.1",
+  "description": "The farm plugin for UnoCSS",
+  "license": "MIT",
+  "funding": "https://github.com/sponsors/antfu",
+  "homepage": "https://github.com/unocss/unocss/tree/main/packages/farm#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/unocss/unocss",
+    "directory": "packages/farm"
+  },
+  "bugs": {
+    "url": "https://github.com/unocss/unocss/issues"
+  },
+  "keywords": [
+    "unocss",
+    "farm-plugin"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "unbuild",
+    "stub": "unbuild --stub"
+  },
+  "peerDependencies": {
+    "@farmfe/core": "^1.0.1"
+  },
+  "dependencies": {
+    "@ampproject/remapping": "^2.2.1",
+    "@rollup/pluginutils": "^5.1.0",
+    "@unocss/config": "workspace:*",
+    "@unocss/core": "workspace:*",
+    "@unocss/inspector": "workspace:*",
+    "@unocss/scope": "workspace:*",
+    "@unocss/transformer-directives": "workspace:*",
+    "chokidar": "^3.5.3",
+    "fast-glob": "^3.3.2",
+    "magic-string": "^0.30.5",
+    "unplugin": "^1.10.1"
+  },
+  "devDependencies": {
+    "@farmfe/cli": "^1.0.1",
+    "@farmfe/core": "^1.1.1",
+    "@unocss/shared-integration": "workspace:*"
+  }
+}

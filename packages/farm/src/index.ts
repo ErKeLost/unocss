@@ -1,23 +1,11 @@
 import process from 'node:process'
-import { isAbsolute, normalize } from 'node:path'
 import type { UserConfig, UserConfigDefaults } from '@unocss/core'
 import type { ResolvedUnpluginOptions, UnpluginOptions } from 'unplugin'
 import { createUnplugin } from 'unplugin'
-import WebpackSources from 'webpack-sources'
 import { createContext } from '../../shared-integration/src/context'
 import { setupContentExtractor } from '../../shared-integration/src/content'
 import { getHash } from '../../shared-integration/src/hash'
-import {
-  HASH_PLACEHOLDER_RE,
-  LAYER_MARK_ALL,
-  LAYER_PLACEHOLDER_RE,
-  RESOLVED_ID_RE,
-  getCssEscaperForJsContent,
-  getHashPlaceholder,
-  getLayerPlaceholder,
-  resolveId,
-  resolveLayer,
-} from '../../shared-integration/src/layers'
+import { HASH_PLACEHOLDER_RE, LAYER_MARK_ALL, LAYER_PLACEHOLDER_RE, RESOLVED_ID_RE, getCssEscaperForJsContent, getHashPlaceholder, getLayerPlaceholder, resolveId, resolveLayer } from '../../shared-integration/src/layers'
 import { applyTransformers } from '../../shared-integration/src/transformers'
 import { getPath, isCssId } from '../../shared-integration/src/utils'
 
@@ -30,14 +18,14 @@ export interface WebpackPluginOptions<Theme extends object = object> extends Use
   watch?: boolean
 }
 
-const PLUGIN_NAME = 'unocss:webpack'
+const PLUGIN_NAME = 'unocss:farm'
 const UPDATE_DEBOUNCE = 10
 
 export function defineConfig<Theme extends object>(config: WebpackPluginOptions<Theme>) {
   return config
 }
 
-export default function WebpackPlugin<Theme extends object>(
+export default function FarmPlugin<Theme extends object>(
   configOrPath?: WebpackPluginOptions<Theme> | string,
   defaults?: UserConfigDefaults,
 ) {
@@ -48,13 +36,14 @@ export default function WebpackPlugin<Theme extends object>(
     })
     const { uno, tokens, filter, extract, onInvalidate, tasks, flushTasks } = ctx
 
-    let timer: ReturnType<typeof setTimeout>
+    let timer: any
     onInvalidate(() => {
       clearTimeout(timer)
       timer = setTimeout(updateModules, UPDATE_DEBOUNCE)
     })
 
     const nonPreTransformers = ctx.uno.config.transformers?.filter(i => i.enforce !== 'pre')
+
     if (nonPreTransformers?.length) {
       console.warn(
         // eslint-disable-next-line prefer-template
@@ -71,9 +60,9 @@ export default function WebpackPlugin<Theme extends object>(
     const hashes = new Map<string, string>()
 
     const plugin = {
-      name: 'unocss:webpack',
+      name: PLUGIN_NAME,
       enforce: 'pre',
-      transformInclude(id) {
+      transformInclude(id: string) {
         return filter('', id) && !id.endsWith('.html') && !RESOLVED_ID_RE.test(id)
       },
       async transform(code, id) {
@@ -82,6 +71,7 @@ export default function WebpackPlugin<Theme extends object>(
           return result
         if (result == null)
           tasks.push(extract(code, id))
+
         else
           tasks.push(extract(result.code, id))
         return result
@@ -106,55 +96,49 @@ export default function WebpackPlugin<Theme extends object>(
       },
       // serve the placeholders in virtual module
       load(id) {
+
         const layer = getLayer(id)
         const hash = hashes.get(id)
         if (layer)
           return (hash ? getHashPlaceholder(hash) : '') + getLayerPlaceholder(layer)
       },
-      webpack(compiler) {
-        // replace the placeholders
-        compiler.hooks.compilation.tap(PLUGIN_NAME, (compilation) => {
-          const optimizeAssetsHook
-            = /* webpack 5 & 6 */ compilation.hooks.processAssets
-            || /* webpack 4 */ compilation.hooks.optimizeAssets
-
-          optimizeAssetsHook.tapPromise(PLUGIN_NAME, async () => {
-            const files = Object.keys(compilation.assets)
-
+      farm: {
+        renderResourcePot: {
+          filters: {
+            moduleIds: [''],
+          },
+          async executor(params) {
             await flushTasks()
             const result = await uno.generate(tokens, { minify: true })
 
-            for (const file of files) {
-              // https://github.com/unocss/unocss/pull/1428
-              if (file === '*')
-                return
+            let code = params.content
+            let replaced = false
+            let escapeCss: ReturnType<typeof getCssEscaperForJsContent>
+            code = code.replace(HASH_PLACEHOLDER_RE, '')
+            code = code.replace(LAYER_PLACEHOLDER_RE, (_, layer, escapeView) => {
+              replaced = true
+              const css = layer === LAYER_MARK_ALL
+                ? result.getLayers(undefined, Array.from(entries)
+                  .map(i => resolveLayer(i)).filter((i): i is string => !!i))
+                : (result.getLayer(layer) || '')
 
-              let code = compilation.assets[file].source().toString()
-              let escapeCss: ReturnType<typeof getCssEscaperForJsContent>
-              let replaced = false
-              code = code.replace(HASH_PLACEHOLDER_RE, '')
-              code = code.replace(LAYER_PLACEHOLDER_RE, (_, layer, escapeView) => {
-                replaced = true
-                const css = layer === LAYER_MARK_ALL
-                  ? result.getLayers(undefined, Array.from(entries)
-                    .map(i => resolveLayer(i)).filter((i): i is string => !!i))
-                  : (result.getLayer(layer) || '')
+              escapeCss = escapeCss ?? getCssEscaperForJsContent(escapeView)
 
-                escapeCss = escapeCss ?? getCssEscaperForJsContent(escapeView)
-                console.log(css);
-
-                return escapeCss(css)
-              })
-              if (replaced) {
-                compilation.assets[file] = new WebpackSources.SourceMapSource(code, file, compilation.assets[file].map() as any) as any
+              return escapeCss(css)
+            })
+            if (replaced) {
+              return {
+                content: code,
+                sourcemap: '',
               }
             }
-          })
-        })
+          },
+        },
       },
-    } as UnpluginOptions as Required<ResolvedUnpluginOptions>
+    } as unknown as UnpluginOptions as Required<ResolvedUnpluginOptions>
 
     let lastTokenSize = tokens.size
+    // webpack 的 update
     async function updateModules() {
       if (!plugin.__vfsModules)
         return
@@ -167,10 +151,7 @@ export default function WebpackPlugin<Theme extends object>(
       lastTokenSize = tokens.size
       Array.from(plugin.__vfsModules)
         .forEach((id) => {
-          let path = decodeURIComponent(id.slice(plugin.__virtualModulePrefix.length))
-          // unplugin changes the id in the `load` hook, follow it
-          // https://github.com/unjs/unplugin/pull/145/files#diff-2b106437404a793ee5b8f3823344656ce880f698d3d8cb6a7cf785e36fb4bf5cR27
-          path = normalizeAbsolutePath(path)
+          const path = decodeURIComponent(id.slice(plugin.__virtualModulePrefix.length))
           const layer = resolveLayer(path)
           if (!layer)
             return
@@ -186,7 +167,7 @@ export default function WebpackPlugin<Theme extends object>(
     }
 
     return plugin
-  }).webpack()
+  }).farm()
 }
 function getLayer(id: string) {
   let layer = resolveLayer(getPath(id))
@@ -196,12 +177,4 @@ function getLayer(id: string) {
       layer = resolveLayer(entry)
   }
   return layer
-}
-
-// https://github.com/unjs/unplugin/pull/145/files#diff-39b2554fd18da165b59a6351b1aafff3714e2a80c1435f2de9706355b4d32351R13-R19
-function normalizeAbsolutePath(path: string) {
-  if (isAbsolute(path))
-    return normalize(path)
-  else
-    return path
 }
