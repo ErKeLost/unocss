@@ -5,7 +5,8 @@ export default defineBuildConfig({
     'src/index',
   ],
   clean: true,
-  declaration: true,
+  // declaration: true,
+  failOnWarn: false,
   externals: [
     'vite',
     'webpack',

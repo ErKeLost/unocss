@@ -36,7 +36,7 @@
     "stub": "unbuild --stub"
   },
   "peerDependencies": {
-    "@farmfe/core": "^0.14.18"
+    "@farmfe/core": "^1.0.1"
   },
   "dependencies": {
     "@ampproject/remapping": "^2.2.1",
@@ -52,8 +52,8 @@
     "unplugin": "^1.10.0"
   },
   "devDependencies": {
-    "@farmfe/cli": "^1.0.0",
-    "@farmfe/core": "^1.0.2",
+    "@farmfe/cli": "^1.0.1",
+    "@farmfe/core": "^1.1.1",
     "@unocss/shared-integration": "workspace:*"
   }
 }
