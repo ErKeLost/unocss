@@ -151,7 +151,6 @@
   },
   "lint-staged": {
     "*.{js,ts,tsx,vue,md}": [
-      "eslint --cache --fix"
     ]
   }
 }
