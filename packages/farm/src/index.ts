@@ -40,7 +40,7 @@ export default function FarmPlugin<Theme extends object>(
     let timer: any
     onInvalidate(() => {
       clearTimeout(timer)
-      timer = setTimeout(updateModules, UPDATE_DEBOUNCE)
+      // timer = setTimeout(updateModules, UPDATE_DEBOUNCE)
     })
 
     const nonPreTransformers = ctx.uno.config.transformers?.filter(i => i.enforce !== 'pre')
@@ -139,34 +139,34 @@ export default function FarmPlugin<Theme extends object>(
       },
     } as unknown as UnpluginOptions as Required<ResolvedUnpluginOptions>
 
-    let lastTokenSize = tokens.size
+    // let lastTokenSize = tokens.size
     // webpack 的 update
-    async function updateModules() {
-      if (!plugin.__vfsModules)
-        return
+    // async function updateModules() {
+    //   if (!plugin.__vfsModules)
+    //     return
 
-      await flushTasks()
-      const result = await uno.generate(tokens)
-      if (lastTokenSize === tokens.size)
-        return
+    //   await flushTasks()
+    //   const result = await uno.generate(tokens)
+    //   if (lastTokenSize === tokens.size)
+    //     return
 
-      lastTokenSize = tokens.size
-      Array.from(plugin.__vfsModules)
-        .forEach((id) => {
-          const path = decodeURIComponent(id.slice(plugin.__virtualModulePrefix.length))
-          const layer = resolveLayer(path)
-          if (!layer)
-            return
-          const code = layer === LAYER_MARK_ALL
-            ? result.getLayers(undefined, Array.from(entries)
-              .map(i => resolveLayer(i)).filter((i): i is string => !!i))
-            : (result.getLayer(layer) || '')
+    //   lastTokenSize = tokens.size
+    //   Array.from(plugin.__vfsModules)
+    //     .forEach((id) => {
+    //       const path = decodeURIComponent(id.slice(plugin.__virtualModulePrefix.length))
+    //       const layer = resolveLayer(path)
+    //       if (!layer)
+    //         return
+    //       const code = layer === LAYER_MARK_ALL
+    //         ? result.getLayers(undefined, Array.from(entries)
+    //           .map(i => resolveLayer(i)).filter((i): i is string => !!i))
+    //         : (result.getLayer(layer) || '')
 
-          const hash = getHash(code)
-          hashes.set(path, hash)
-          plugin.__vfs.writeModule(id, code)
-        })
-    }
+    //       const hash = getHash(code)
+    //       hashes.set(path, hash)
+    //       plugin.__vfs.writeModule(id, code)
+    //     })
+    // }
 
     return plugin
   }).farm()
