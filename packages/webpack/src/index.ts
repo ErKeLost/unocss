@@ -141,13 +141,11 @@ export default function WebpackPlugin<Theme extends object>(
                   : (result.getLayer(layer) || '')
 
                 escapeCss = escapeCss ?? getCssEscaperForJsContent(escapeView)
-                console.log(css);
 
                 return escapeCss(css)
               })
-              if (replaced) {
+              if (replaced)
                 compilation.assets[file] = new WebpackSources.SourceMapSource(code, file, compilation.assets[file].map() as any) as any
-              }
             }
           })
         })

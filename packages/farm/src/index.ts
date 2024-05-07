@@ -8,6 +8,7 @@ import { getHash } from '../../shared-integration/src/hash'
 import { HASH_PLACEHOLDER_RE, LAYER_MARK_ALL, LAYER_PLACEHOLDER_RE, RESOLVED_ID_RE, getCssEscaperForJsContent, getHashPlaceholder, getLayerPlaceholder, resolveId, resolveLayer } from '../../shared-integration/src/layers'
 import { applyTransformers } from '../../shared-integration/src/transformers'
 import { getPath, isCssId } from '../../shared-integration/src/utils'
+import MagicString from 'magic-string'
 
 export interface WebpackPluginOptions<Theme extends object = object> extends UserConfig<Theme> {
   /**
@@ -65,7 +66,7 @@ export default function FarmPlugin<Theme extends object>(
       transformInclude(id: string) {
         return filter('', id) && !id.endsWith('.html') && !RESOLVED_ID_RE.test(id)
       },
-      async transform(code, id) {
+      async transform(code: string, id: string) {
         const result = await applyTransformers(ctx, code, id, 'pre')
         if (isCssId(id))
           return result
@@ -76,7 +77,7 @@ export default function FarmPlugin<Theme extends object>(
           tasks.push(extract(result.code, id))
         return result
       },
-      resolveId(id) {
+      resolveId(id: string) {
         const entry = resolveId(id)
         if (entry === id)
           return
@@ -90,12 +91,12 @@ export default function FarmPlugin<Theme extends object>(
           return entry + query
         }
       },
-      loadInclude(id) {
+      loadInclude(id: string) {
         const layer = getLayer(id)
         return !!layer
       },
       // serve the placeholders in virtual module
-      load(id) {
+      load(id: string) {
 
         const layer = getLayer(id)
         const hash = hashes.get(id)
@@ -107,7 +108,7 @@ export default function FarmPlugin<Theme extends object>(
           filters: {
             moduleIds: [''],
           },
-          async executor(params) {
+          async executor(params: { content: any }) {
             await flushTasks()
             const result = await uno.generate(tokens, { minify: true })
 
@@ -115,7 +116,7 @@ export default function FarmPlugin<Theme extends object>(
             let replaced = false
             let escapeCss: ReturnType<typeof getCssEscaperForJsContent>
             code = code.replace(HASH_PLACEHOLDER_RE, '')
-            code = code.replace(LAYER_PLACEHOLDER_RE, (_, layer, escapeView) => {
+            code = code.replace(LAYER_PLACEHOLDER_RE, (_: any, layer: string | undefined, escapeView: string) => {
               replaced = true
               const css = layer === LAYER_MARK_ALL
                 ? result.getLayers(undefined, Array.from(entries)
@@ -127,9 +128,10 @@ export default function FarmPlugin<Theme extends object>(
               return escapeCss(css)
             })
             if (replaced) {
+              const s = new MagicString(code)
               return {
-                content: code,
-                sourcemap: '',
+                content: s.toString(),
+                sourcemap: s.generateMap() as any,
               }
             }
           },
