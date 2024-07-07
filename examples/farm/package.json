@@ -1,0 +1,24 @@
+{
+  "name": "farm-vue3",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "farm",
+    "build": "farm build",
+    "preview": "farm preview"
+  },
+  "dependencies": {
+    "vue": "^3.4.21"
+  },
+  "devDependencies": {
+    "@farmfe/cli": "^1.0.2",
+    "@farmfe/core": "^1.2.8",
+    "@iconify-json/logos": "^1.1.42",
+    "@unocss/core": "link:../../packages/core",
+    "@unocss/preset-attributify": "link:../../packages/preset-attributify",
+    "@unocss/preset-icons": "link:../../packages/preset-icons",
+    "@vitejs/plugin-vue": "^5.0.4",
+    "typescript": "^5.4.5",
+    "unocss": "link:../../packages/unocss"
+  }
+}
