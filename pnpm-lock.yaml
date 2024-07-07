@@ -692,19 +692,6 @@ importers:
       unplugin:
         specifier: ^1.10.1
         version: 1.11.0
-      webpack-sources:
-        specifier: ^3.2.3
-        version: 3.2.3
-    devDependencies:
-      '@types/webpack':
-        specifier: ^5.28.5
-        version: 5.28.5(esbuild@0.20.2)
-      '@types/webpack-sources':
-        specifier: ^3.2.3
-        version: 3.2.3
-      webpack:
-        specifier: ^5.91.0
-        version: 5.92.1(esbuild@0.20.2)
 
   packages/inspector:
     dependencies:

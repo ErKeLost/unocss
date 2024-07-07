@@ -151,8 +151,5 @@
     "pre-commit": "npx esno scripts/prepare.ts && npx lint-staged"
   },
   "lint-staged": {
-    "*.{js,ts,tsx,vue,md}": [
-      "eslint --cache --fix"
-    ]
   }
 }

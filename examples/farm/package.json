@@ -15,6 +15,7 @@
     "@farmfe/core": "^1.2.8",
     "@iconify-json/logos": "^1.1.42",
     "@unocss/core": "link:../../packages/core",
+    "@unocss/farm": "link:../../packages/farm",
     "@unocss/preset-attributify": "link:../../packages/preset-attributify",
     "@unocss/preset-icons": "link:../../packages/preset-icons",
     "@vitejs/plugin-vue": "^5.0.4",
