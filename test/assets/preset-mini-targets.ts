@@ -1,6 +1,8 @@
 export const presetMiniTargets: string[] = [
   // align
   'text-left',
+  'text-align-right',
+  'text-align-inherit',
   'vertical-baseline',
   'vertical-super',
   'vertical-inherit',
@@ -342,6 +344,7 @@ export const presetMiniTargets: string[] = [
   'flex-shrink-0',
   'flex-grow',
   'flex-grow-0',
+  '!flex-grow-0',
   'flex-basis-0',
   'flex-basis-1/2',
   'flex-$variable',
@@ -840,8 +843,15 @@ export const presetMiniTargets: string[] = [
   'transition-property-[border]',
   'transition-200',
   'transition-opacity-200',
+  'transition-colors',
+  'transition-colors,opacity',
+  'transition-colors,opacity-200',
   'transition-color,background-color-200',
   'transition-background-color,color-200',
+  'transition-$variant',
+  'transition-[width,height]',
+  'transition-[width,height,colors]',
+  'transition-[width,height,colors]-200',
   'transition',
   'transition-revert-layer',
   'property-none',
@@ -849,6 +859,7 @@ export const presetMiniTargets: string[] = [
   'property-unset',
   'property-margin,padding',
   'property-padding,margin',
+  'property-[padding,margin]',
   'duration-111',
 
   // transition - timings
@@ -1037,6 +1048,8 @@ export const presetMiniTargets: string[] = [
   '-mt-safe',
   '-!mb-safe',
   '!-ms-safe',
+  '*:p-2',
+  '*-p-2',
 
   // variants class
   'all-[.target]-[combinator:test-2]',
@@ -1139,7 +1152,7 @@ export const presetMiniTargets: string[] = [
   'scope-[unocss]:block',
   'scope-[[data-any]]:inline',
 
-  // variants - tagged
+  // variants - taggedData
   'group-focus:p-4',
   'peer-checked:bg-blue-500',
   'parent-hover:text-center',
@@ -1154,6 +1167,22 @@ export const presetMiniTargets: string[] = [
   'group-[[data-attr]]/label:font-17',
   'group-[.as-parent_&]/label:font-18',
   'group-[.not-parent]/label:font-19',
+
+  // variants - taggedAria
+  'group-aria-focus:p-4',
+  'peer-aria-checked:bg-blue-500',
+  'parent-aria-hover:text-center',
+  'previous-aria-checked/label:bg-red-500',
+  'group-aria-hover:font-10',
+  'group-aria-[:hover]:font-11',
+  'group-aria-[[data-attr]]:font-12',
+  'group-aria-[.as-parent_&]:font-13',
+  'group-aria-[.not-parent]:font-14',
+  'group-aria-hover/label:font-15',
+  'group-aria-[:hover]/label:font-16',
+  'group-aria-[[data-attr]]/label:font-17',
+  'group-aria-[.as-parent_&]/label:font-18',
+  'group-aria-[.not-parent]/label:font-19',
 
   // variants - variables
   '[&:nth-child(2)]:m-10',
@@ -1243,4 +1272,9 @@ export const presetMiniNonTargets = [
   'op50>Foo',
 
   'display-a',
+]
+
+export const specialPresetMiniTargets: string[] = [
+  '[&>*]:content-[\',\\00a0\']',
+  '[&>*:not(:last-child)]:after:content-[\',\\00a0\']',
 ]
