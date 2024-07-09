@@ -1,16 +1,18 @@
 import process from 'node:process'
+import type { JsPlugin } from '@farmfe/core'
 import type { Plugin, Update, ViteDevServer } from 'vite'
 import type { GenerateResult, UnocssPluginContext } from '@unocss/core'
 import { notNull } from '@unocss/core'
 import MagicString from 'magic-string'
 import type { VitePluginConfig } from '../../types'
 import { LAYER_MARK_ALL, getHash, getPath, resolveId, resolveLayer } from '../../integration'
+import { exec } from 'node:child_process'
 
 const WARN_TIMEOUT = 20000
 const WS_EVENT_PREFIX = 'unocss:hmr'
 const HASH_LENGTH = 6
 
-export function GlobalModeDevPlugin({ uno, tokens, tasks, flushTasks, affectedModules, onInvalidate, extract, filter, getConfig }: UnocssPluginContext): Plugin[] {
+export function GlobalModeDevPlugin({ uno, tokens, tasks, flushTasks, affectedModules, onInvalidate, extract, filter, getConfig }: UnocssPluginContext): any[] {
   const servers: ViteDevServer[] = []
   const entries = new Set<string>()
 
@@ -106,13 +108,11 @@ export function GlobalModeDevPlugin({ uno, tokens, tasks, flushTasks, affectedMo
   onInvalidate(() => {
     invalidate(10, new Set([...entries, ...affectedModules]))
   })
-
   return [
     {
       name: 'unocss:global',
-      apply: 'serve',
-      enforce: 'pre',
-      async configureServer(_server) {
+      priority: 1000,
+      async configureDevServer(_server) {
         servers.push(_server)
 
         _server.ws.on(WS_EVENT_PREFIX, async ([layer]: string[]) => {
@@ -122,95 +122,145 @@ export function GlobalModeDevPlugin({ uno, tokens, tasks, flushTasks, affectedMo
             sendUpdate(entries)
         })
       },
-      buildStart() {
-        console.log("1213132123123");
-        
-        // warm up for preflights
-        uno.generate([], { preflights: true })
-      },
-      transform(code, id) {
-        if (filter(code, id))
-          tasks.push(extract(code, id))
-        return null
-      },
-      transformIndexHtml: {
-        order: 'pre',
-        handler(code, { filename }) {
-          setWarnTimer()
-          tasks.push(extract(code, filename))
-        },
-        // Compatibility with Legacy Vite
-        enforce: 'pre',
-        transform(code, { filename }) {
-          setWarnTimer()
-          tasks.push(extract(code, filename))
-        },
-      },
-      resolveId(id) {
-        const entry = resolveId(id)
-        if (entry) {
-          resolved = true
-          clearWarnTimer()
-          entries.add(entry)
-          return entry
+      buildStart: {
+        async executor() {
+          // warm up for preflights
+          uno.generate([], { preflights: true })
         }
       },
-      async load(id) {
-        const layer = resolveLayer(getPath(id))
-        if (!layer)
+      // async load(id) {
+      //   const layer = resolveLayer(getPath(id))
+      //   if (!layer)
+      //     return null
+
+      //   const { hash, css } = await generateCSS(layer)
+      //   return {
+      //     // add hash to the chunk of CSS that it will send back to client to check if there is new CSS generated
+      //     code: `${css}__uno_hash_${hash}{--:'';}`,
+      //     map: { mappings: '' },
+      //   }
+      // },
+            // resolveId(id) {
+      //   const entry = resolveId(id)
+      //   if (entry) {
+      //     resolved = true
+      //     clearWarnTimer()
+      //     entries.add(entry)
+      //     return entry
+      //   }
+      // },
+      load: {
+        filters: {
+          resolvedPaths: [''],
+        },
+        executor: async (param, context, hookContext) => {
+          console.log(param);
+
+          const layer = resolveLayer(getPath(param.resolvedPath))
+          console.log(layer);
+
+          if (!layer)
           return null
 
-        const { hash, css } = await generateCSS(layer)
-        return {
-          // add hash to the chunk of CSS that it will send back to client to check if there is new CSS generated
-          code: `${css}__uno_hash_${hash}{--:'';}`,
-          map: { mappings: '' },
+          const { hash, css } = await generateCSS(layer)
+          return {
+            // add hash to the chunk of CSS that it will send back to client to check if there is new CSS generated
+            content: `${css}__uno_hash_${hash}{--:'';}`,
+            moduleType: "unocss"
+          }
         }
-      },
-      closeBundle() {
-        clearWarnTimer()
-      },
+      }
+      // transform: {
+      //   filters: {
+      //     moduleTypes: ['']
+      //   },
+      //   executor(transformHookParam, transformHookResult) {
+      //     console.log(transformHookParam);
+      //     // (code, id) {
+      //     // if (filter(code, id))
+      //     //   tasks.push(extract(code, id))
+      //     // return null
+      //     // }
+      //   }
+      // },
+      // transformIndexHtml: {
+      //   order: 'pre',
+      //   handler(code, { filename }) {
+      //     setWarnTimer()
+      //     tasks.push(extract(code, filename))
+      //   },
+      //   // Compatibility with Legacy Vite
+      //   enforce: 'pre',
+      //   transform(code, { filename }) {
+      //     setWarnTimer()
+      //     tasks.push(extract(code, filename))
+      //   },
+      // },
+      // resolveId(id) {
+      //   const entry = resolveId(id)
+      //   if (entry) {
+      //     resolved = true
+      //     clearWarnTimer()
+      //     entries.add(entry)
+      //     return entry
+      //   }
+      // },
+      // async load(id) {
+      //   const layer = resolveLayer(getPath(id))
+      //   if (!layer)
+      //     return null
+
+      //   const { hash, css } = await generateCSS(layer)
+      //   return {
+      //     // add hash to the chunk of CSS that it will send back to client to check if there is new CSS generated
+      //     code: `${css}__uno_hash_${hash}{--:'';}`,
+      //     map: { mappings: '' },
+      //   }
+      // },
+      // closeBundle() {
+      //   clearWarnTimer()
+      // },
     },
-//     {
-//       name: 'unocss:global:post',
-//       apply(config, env) {
-//         return env.command === 'serve' && !config.build?.ssr
-//       },
-//       enforce: 'post',
-//       async transform(code, id) {
-//         const layer = resolveLayer(getPath(id))
+    //     {
+    //       name: 'unocss:global:post',
+    //       apply(config, env) {
+    //         return env.command === 'serve' && !config.build?.ssr
+    //       },
+    //       enforce: 'post',
+    //       async transform(code, id) {
+    //         const layer = resolveLayer(getPath(id))
 
-//         // inject css modules to send callback on css load
-//         if (layer && code.includes('import.meta.hot')) {
-//           let hmr = `
-// try {
-//   let hash = __vite__css.match(/__uno_hash_(\\w{${HASH_LENGTH}})/)
-//   hash = hash && hash[1]
-//   if (!hash)
-//     console.warn('[unocss-hmr]', 'failed to get unocss hash, hmr might not work')
-//   else
-//     await import.meta.hot.send('${WS_EVENT_PREFIX}', ['${layer}']);
-// } catch (e) {
-//   console.warn('[unocss-hmr]', e)
-// }
-// if (!import.meta.url.includes('?'))
-//   await new Promise(resolve => setTimeout(resolve, 100))`
+    //         // inject css modules to send callback on css load
+    //         if (layer && code.includes('import.meta.hot')) {
+    //           let hmr = `
+    // try {
+    //   let hash = __vite__css.match(/__uno_hash_(\\w{${HASH_LENGTH}})/)
+    //   hash = hash && hash[1]
+    //   if (!hash)
+    //     console.warn('[unocss-hmr]', 'failed to get unocss hash, hmr might not work')
+    //   else
+    //     await import.meta.hot.send('${WS_EVENT_PREFIX}', ['${layer}']);
+    // } catch (e) {
+    //   console.warn('[unocss-hmr]', e)
+    // }
+    // if (!import.meta.url.includes('?'))
+    //   await new Promise(resolve => setTimeout(resolve, 100))`
 
-//           const config = await getConfig() as VitePluginConfig
+    //           const config = await getConfig() as VitePluginConfig
 
-//           if (config.hmrTopLevelAwait === false)
-//             hmr = `;(async function() {${hmr}\n})()`
-//           hmr = `\nif (import.meta.hot) {${hmr}}`
+    //           if (config.hmrTopLevelAwait === false)
+    //             hmr = `;(async function() {${hmr}\n})()`
+    //           hmr = `\nif (import.meta.hot) {${hmr}}`
 
-//           const s = new MagicString(code)
-//           s.append(hmr)
+    //           const s = new MagicString(code)
+    //           s.append(hmr)
 
-//           return {
-//             code: s.toString(),
-//             map: s.generateMap() as any,
-//           }
-//         }
-//       },
-//     },
+    //           return {
+    //             code: s.toString(),
+    //             map: s.generateMap() as any,
+    //           }
+    //         }
+    //       },
+    //     },
   ]
 }
