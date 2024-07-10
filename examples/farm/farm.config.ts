@@ -4,7 +4,8 @@ import UnoCSS from '@unocss/farm'
 
 export default defineConfig({
   compilation: {
-    persistentCache:false,
+    persistentCache: false,
+    progress: false,
   },
   vitePlugins: [vue()],
   plugins: [UnoCSS()],

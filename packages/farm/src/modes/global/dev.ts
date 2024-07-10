@@ -7,6 +7,7 @@ import MagicString from 'magic-string'
 import type { VitePluginConfig } from '../../types'
 import { LAYER_MARK_ALL, getHash, getPath, resolveId, resolveLayer } from '../../integration'
 import { exec } from 'node:child_process'
+import path from 'node:path'
 
 const WARN_TIMEOUT = 20000
 const WS_EVENT_PREFIX = 'unocss:hmr'
@@ -47,10 +48,10 @@ export function GlobalModeDevPlugin({ uno, tokens, tasks, flushTasks, affectedMo
   function invalidate(timer = 10, ids: Set<string> = entries) {
     for (const server of servers) {
       for (const id of ids) {
-        const mod = server.moduleGraph.getModuleById(id)
-        if (!mod)
-          continue
-        server!.moduleGraph.invalidateModule(mod)
+        // const mod = server.moduleGraph.getModuleById(id)
+        // if (!mod)
+        //   continue
+        // server!.moduleGraph.invalidateModule(mod)
       }
     }
     clearTimeout(invalidateTimer)
@@ -66,15 +67,15 @@ export function GlobalModeDevPlugin({ uno, tokens, tasks, flushTasks, affectedMo
         type: 'update',
         updates: Array.from(ids)
           .map((id) => {
-            const mod = server.moduleGraph.getModuleById(id)
-            if (!mod)
-              return null
-            return {
-              acceptedPath: mod.url,
-              path: mod.url,
-              timestamp: lastServedTime,
-              type: 'js-update',
-            } as Update
+            // const mod = server.moduleGraph.getModuleById(id)
+            // if (!mod)
+            //   return null
+            // return {
+            //   acceptedPath: mod.url,
+            //   path: mod.url,
+            //   timestamp: lastServedTime,
+            //   type: 'js-update',
+            // } as Update
           })
           .filter(notNull),
       })
@@ -114,7 +115,6 @@ export function GlobalModeDevPlugin({ uno, tokens, tasks, flushTasks, affectedMo
       priority: 1000,
       async configureDevServer(_server) {
         servers.push(_server)
-
         _server.ws.on(WS_EVENT_PREFIX, async ([layer]: string[]) => {
           const preHash = lastServedHash.get(layer)
           await generateCSS(layer)
@@ -128,61 +128,50 @@ export function GlobalModeDevPlugin({ uno, tokens, tasks, flushTasks, affectedMo
           uno.generate([], { preflights: true })
         }
       },
-      // async load(id) {
-      //   const layer = resolveLayer(getPath(id))
-      //   if (!layer)
-      //     return null
-
-      //   const { hash, css } = await generateCSS(layer)
-      //   return {
-      //     // add hash to the chunk of CSS that it will send back to client to check if there is new CSS generated
-      //     code: `${css}__uno_hash_${hash}{--:'';}`,
-      //     map: { mappings: '' },
-      //   }
-      // },
-            // resolveId(id) {
-      //   const entry = resolveId(id)
-      //   if (entry) {
-      //     resolved = true
-      //     clearWarnTimer()
-      //     entries.add(entry)
-      //     return entry
-      //   }
-      // },
-      load: {
+      resolve: {
         filters: {
-          resolvedPaths: [''],
+          sources: ['uno.css'],
+          importers: ['.*'],
         },
         executor: async (param, context, hookContext) => {
-          console.log(param);
-
+          const entry = resolveId(param.source)
+          resolved = true
+          clearWarnTimer()
+          entries.add(entry)
+          return {
+            resolvedPath: entry,
+            query: [],
+            sideEffects: false,
+            external: false,
+            meta: {},
+          }
+        }
+      },
+      load: {
+        filters: {
+          resolvedPaths: ['/__uno.css'],
+        },
+        executor: async (param, context, hookContext) => {
           const layer = resolveLayer(getPath(param.resolvedPath))
-          console.log(layer);
-
-          if (!layer)
-          return null
-
           const { hash, css } = await generateCSS(layer)
           return {
-            // add hash to the chunk of CSS that it will send back to client to check if there is new CSS generated
             content: `${css}__uno_hash_${hash}{--:'';}`,
             moduleType: "unocss"
           }
         }
-      }
-      // transform: {
-      //   filters: {
-      //     moduleTypes: ['']
-      //   },
-      //   executor(transformHookParam, transformHookResult) {
-      //     console.log(transformHookParam);
-      //     // (code, id) {
-      //     // if (filter(code, id))
-      //     //   tasks.push(extract(code, id))
-      //     // return null
-      //     // }
-      //   }
-      // },
+      },
+      transform: {
+        filters: {
+          moduleTypes: ['unocss']
+        },
+        executor(transformHookParam, transformHookResult) {
+          // console.log(transformHookParam);
+          const { content: code, moduleId: id } = transformHookParam
+          if (filter(code, id))
+            tasks.push(extract(code, id))
+          return null
+        }
+      },
       // transformIndexHtml: {
       //   order: 'pre',
       //   handler(code, { filename }) {
@@ -196,71 +185,93 @@ export function GlobalModeDevPlugin({ uno, tokens, tasks, flushTasks, affectedMo
       //     tasks.push(extract(code, filename))
       //   },
       // },
-      // resolveId(id) {
-      //   const entry = resolveId(id)
-      //   if (entry) {
-      //     resolved = true
-      //     clearWarnTimer()
-      //     entries.add(entry)
-      //     return entry
-      //   }
-      // },
-      // async load(id) {
-      //   const layer = resolveLayer(getPath(id))
-      //   if (!layer)
-      //     return null
-
-      //   const { hash, css } = await generateCSS(layer)
-      //   return {
-      //     // add hash to the chunk of CSS that it will send back to client to check if there is new CSS generated
-      //     code: `${css}__uno_hash_${hash}{--:'';}`,
-      //     map: { mappings: '' },
-      //   }
-      // },
-      // closeBundle() {
-      //   clearWarnTimer()
-      // },
+      finish: {
+        async executor() {
+          clearWarnTimer()
+        }
+      }
     },
-    //     {
-    //       name: 'unocss:global:post',
-    //       apply(config, env) {
-    //         return env.command === 'serve' && !config.build?.ssr
-    //       },
-    //       enforce: 'post',
-    //       async transform(code, id) {
-    //         const layer = resolveLayer(getPath(id))
+    {
+      name: 'unocss:global:post',
+      // apply(config, env) {
+      //   return env.command === 'serve' && !config.build?.ssr
+      // },
+      priority: 999,
+      transform: {
+        filters: {
+          moduleTypes: ['unocss'],
+          sources: ['']
+        },
+        async executor(transformHookParam, transformHookResult) {
+          const { content: code, moduleId: id } = transformHookParam
+          const layer = resolveLayer(getPath(id))
 
-    //         // inject css modules to send callback on css load
-    //         if (layer && code.includes('import.meta.hot')) {
-    //           let hmr = `
-    // try {
-    //   let hash = __vite__css.match(/__uno_hash_(\\w{${HASH_LENGTH}})/)
-    //   hash = hash && hash[1]
-    //   if (!hash)
-    //     console.warn('[unocss-hmr]', 'failed to get unocss hash, hmr might not work')
-    //   else
-    //     await import.meta.hot.send('${WS_EVENT_PREFIX}', ['${layer}']);
-    // } catch (e) {
-    //   console.warn('[unocss-hmr]', e)
-    // }
-    // if (!import.meta.url.includes('?'))
-    //   await new Promise(resolve => setTimeout(resolve, 100))`
+          // inject css modules to send callback on css load
+          if (layer) {
+            let hmr = `
+          try {
+            let hash = __vite__css.match(/__uno_hash_(\\w{${HASH_LENGTH}})/)
+            hash = hash && hash[1]
+            if (!hash)
+              console.warn('[unocss-hmr]', 'failed to get unocss hash, hmr might not work')
+            else
+              await import.meta.hot.send('${WS_EVENT_PREFIX}', ['${layer}']);
+          } catch (e) {
+            console.warn('[unocss-hmr]', e)
+          }
+          if (!import.meta.url.includes('?'))
+            await new Promise(resolve => setTimeout(resolve, 100))`
 
-    //           const config = await getConfig() as VitePluginConfig
+            const config = await getConfig() as VitePluginConfig
 
-    //           if (config.hmrTopLevelAwait === false)
-    //             hmr = `;(async function() {${hmr}\n})()`
-    //           hmr = `\nif (import.meta.hot) {${hmr}}`
+            if (config.hmrTopLevelAwait === false)
+              hmr = `;(async function() {${hmr}\n})()`
+            hmr = `\nif (import.meta.hot) {${hmr}}`
 
-    //           const s = new MagicString(code)
-    //           s.append(hmr)
+            const s = new MagicString(code)
+            s.append(hmr)
+            return {
+              content: s.toString(),
+              moduleType: 'css', // transformed sass to css,
+              sourceMap: JSON.stringify(s.generateMap()) as any,
+            }
+          }
+        }
+      },
+      //   async transform(code, id) {
+      //     const layer = resolveLayer(getPath(id))
 
-    //           return {
-    //             code: s.toString(),
-    //             map: s.generateMap() as any,
-    //           }
-    //         }
-    //       },
-    //     },
+      //     // inject css modules to send callback on css load
+      //     if (layer && code.includes('import.meta.hot')) {
+      //       let hmr = `
+      // try {
+      //   let hash = __vite__css.match(/__uno_hash_(\\w{${HASH_LENGTH}})/)
+      //   hash = hash && hash[1]
+      //   if (!hash)
+      //     console.warn('[unocss-hmr]', 'failed to get unocss hash, hmr might not work')
+      //   else
+      //     await import.meta.hot.send('${WS_EVENT_PREFIX}', ['${layer}']);
+      // } catch (e) {
+      //   console.warn('[unocss-hmr]', e)
+      // }
+      // if (!import.meta.url.includes('?'))
+      //   await new Promise(resolve => setTimeout(resolve, 100))`
+
+      //       const config = await getConfig() as VitePluginConfig
+
+      //       if (config.hmrTopLevelAwait === false)
+      //         hmr = `;(async function() {${hmr}\n})()`
+      //       hmr = `\nif (import.meta.hot) {${hmr}}`
+
+      //       const s = new MagicString(code)
+      //       s.append(hmr)
+
+      //       return {
+      //         code: s.toString(),
+      //         map: s.generateMap() as any,
+      //       }
+      //     }
+      //   },
+    },
   ]
 }

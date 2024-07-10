@@ -1,5 +1,5 @@
 import process from 'node:process'
-import { isAbsolute, normalize } from 'node:path'
+import path, { isAbsolute, normalize } from 'node:path'
 import type { UserConfig, UserConfigDefaults } from '@unocss/core'
 import type { ResolvedUnpluginOptions, UnpluginOptions } from 'unplugin'
 import { createUnplugin } from 'unplugin'
@@ -87,6 +87,7 @@ export default function WebpackPlugin<Theme extends object>(
         return result
       },
       resolveId(id) {
+
         const entry = resolveId(id)
         if (entry === id)
           return
@@ -115,8 +116,8 @@ export default function WebpackPlugin<Theme extends object>(
         // replace the placeholders
         compiler.hooks.compilation.tap(PLUGIN_NAME, (compilation) => {
           const optimizeAssetsHook
-          = /* webpack 5 & 6 */ compilation.hooks.processAssets
-          || /* webpack 4 */ compilation.hooks.optimizeAssets
+            = /* webpack 5 & 6 */ compilation.hooks.processAssets
+            || /* webpack 4 */ compilation.hooks.optimizeAssets
 
           optimizeAssetsHook.tapPromise(PLUGIN_NAME, async () => {
             const files = Object.keys(compilation.assets)
