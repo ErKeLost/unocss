@@ -1,10 +1,10 @@
-# @unocss/vite
+# @unocss/webpack
 
-The Vite plugin for UnoCSS. Ships with the `unocss` package.
+The Webpack plugin for UnoCSS.
 
 ## Documentation
 
-Please refer to the [documentation](https://unocss.dev/integrations/vite).
+Please refer to the [documentation](https://unocss.dev/integrations/webpack).
 
 ## License
 

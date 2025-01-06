@@ -90,6 +90,10 @@
         "types": "./dist/postcss.d.cts",
         "default": "./dist/postcss.cjs"
       }
+    },
+    "./farm": {
+      "types": "./dist/farm.d.mts",
+      "default": "./dist/farm.mjs"
     }
   },
   "main": "dist/index.mjs",
