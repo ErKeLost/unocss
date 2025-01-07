@@ -43,7 +43,6 @@ export function unplugin<Theme extends object>(configOrPath?: WebpackPluginOptio
 
     const plugin = {
       name: 'unocss:farm',
-      enforce: 'pre',
       transformInclude(id) {
         return filter('', id) && !id.endsWith('.html') && !RESOLVED_ID_RE.test(id)
       },
@@ -58,22 +57,21 @@ export function unplugin<Theme extends object>(configOrPath?: WebpackPluginOptio
           tasks.push(extract(result.code, id))
         return result
       },
-      // TODO error 这个 钩子有问题
-      // resolveId(id) {
-      //   const entry = resolveId(id)
-
-      //   if (entry === id)
-      //     return
-      //   if (entry) {
-      //     let query = ''
-      //     const queryIndex = id.indexOf('?')
-      //     if (queryIndex >= 0)
-      //       query = id.slice(queryIndex)
-      //     entries.add(entry)
-      //     // preserve the input query
-      //     return entry + query
-      //   }
-      // },
+      // 这个钩子有问题 设置 enforce 的时候会导致报错 估计是解析有问题 某些操作被覆盖了
+      resolveId(id) {
+        const entry = resolveId(id)
+        if (entry === id)
+          return
+        if (entry) {
+          let query = ''
+          const queryIndex = id.indexOf('?')
+          if (queryIndex >= 0)
+            query = id.slice(queryIndex)
+          entries.add(entry)
+          // preserve the input query
+          return entry + query
+        }
+      },
       loadInclude(id) {
         const layer = getLayer(id)
         return !!layer
@@ -84,6 +82,27 @@ export function unplugin<Theme extends object>(configOrPath?: WebpackPluginOptio
         const hash = hashes.get(id)
         if (layer)
           return (hash ? getHashPlaceholder(hash) : '') + getLayerPlaceholder(layer)
+      },
+      farm: {
+        renderResourcePot: {
+          filters: {
+            moduleIds: ['^*$'],
+            resourcePotTypes: ['css'],
+          },
+          executor: async () => {
+            await ctx.ready
+            await flushTasks()
+            // const result = await ctx.uno.generate(tokens, { minify: true })
+
+            // return {
+            //   content: param.content.replace(
+            //     '<--layer-->',
+            //     cssCode
+            //   ),
+            //   sourceMap
+            // };
+          },
+        },
       },
       // webpack(compiler) {
       //   compiler.hooks.beforeCompile.tapPromise(PLUGIN_NAME, async () => {
