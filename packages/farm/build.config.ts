@@ -10,7 +10,7 @@ export default defineBuildConfig({
     emitCJS: true,
   },
   externals: [
-    'vite',
-    'webpack',
+    '@farmfe/core',
+    '@farmfe/cli',
   ],
 })

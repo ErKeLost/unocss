@@ -13,6 +13,6 @@ export interface WebpackPluginOptions<Theme extends object = object> extends Use
 export default function FarmPlugin<Theme extends object>(
   configOrPath?: WebpackPluginOptions<Theme> | string,
   defaults?: UserConfigDefaults,
-) {
+): any {
   return unplugin(configOrPath, defaults).farm()
 }

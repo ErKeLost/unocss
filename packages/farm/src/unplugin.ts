@@ -8,9 +8,12 @@ import { setupContentExtractor } from '../../shared-integration/src/content'
 import { createContext } from '../../shared-integration/src/context'
 import { getHash } from '../../shared-integration/src/hash'
 import {
+  getCssEscaperForJsContent,
   getHashPlaceholder,
   getLayerPlaceholder,
+  HASH_PLACEHOLDER_RE,
   LAYER_MARK_ALL,
+  LAYER_PLACEHOLDER_RE,
   RESOLVED_ID_RE,
   resolveId,
   resolveLayer,
@@ -43,6 +46,7 @@ export function unplugin<Theme extends object>(configOrPath?: WebpackPluginOptio
 
     const plugin = {
       name: 'unocss:farm',
+      enforce: 'pre',
       transformInclude(id) {
         return filter('', id) && !id.endsWith('.html') && !RESOLVED_ID_RE.test(id)
       },
@@ -89,18 +93,33 @@ export function unplugin<Theme extends object>(configOrPath?: WebpackPluginOptio
             moduleIds: ['^*$'],
             resourcePotTypes: ['css'],
           },
-          executor: async () => {
-            await ctx.ready
+          async executor(params) {
             await flushTasks()
-            // const result = await ctx.uno.generate(tokens, { minify: true })
+            const result = await ctx.uno.generate(tokens, { minify: true })
+            let code = params.content
+            let escapeCss: ReturnType<typeof getCssEscaperForJsContent>
 
-            // return {
-            //   content: param.content.replace(
-            //     '<--layer-->',
-            //     cssCode
-            //   ),
-            //   sourceMap
-            // };
+            let replaced = false
+
+            code = code.replace(HASH_PLACEHOLDER_RE, '')
+            code = code.replace(HASH_PLACEHOLDER_RE, '')
+            code = code.replace(LAYER_PLACEHOLDER_RE, (_, layer, escapeView) => {
+              replaced = true
+              const css = layer.trim() === LAYER_MARK_ALL
+                ? result.getLayers(undefined, Array.from(entries)
+                    .map(i => resolveLayer(i)).filter((i): i is string => !!i))
+                : (result.getLayer(layer) || '')
+
+              escapeCss = escapeCss ?? getCssEscaperForJsContent(escapeView.trim())
+
+              return escapeCss(css)
+            })
+            if (replaced) {
+              return {
+                content: code,
+                sourcemap: '',
+              }
+            }
           },
         },
       },
