@@ -5,7 +5,7 @@
         UnoCSS222
       </div>
       <div op30 text-lg fw300 m10>
-        The instant on-demand Atomic CSS engine.
+        The instant on-demand Atomic CSS .
       </div>
       <div m2 flex justify-center text-2xl op30 hover="op80">
         <a i-carbon-logo-github text-inherit href="https://github.com/unocss/unocss" target="_blank" />

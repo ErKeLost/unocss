@@ -88,10 +88,10 @@ export function unplugin<Theme extends object>(configOrPath?: WebpackPluginOptio
           return (hash ? getHashPlaceholder(hash) : '') + getLayerPlaceholder(layer)
       },
       farm: {
-        renderResourcePot: {
+        freezeModule: {
           filters: {
-            moduleIds: ['^*$'],
-            resourcePotTypes: ['css'],
+            resolvedPaths: ['.css'],
+            moduleTypes: ['css'],
           },
           async executor(params) {
             await flushTasks()
