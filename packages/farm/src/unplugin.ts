@@ -43,7 +43,7 @@ export function unplugin<Theme extends object>(configOrPath?: WebpackPluginOptio
 
     const entries = new Set<string>()
     const hashes = new Map<string, string>()
-
+    const VIRTUAL_MODULE_ID = 'virtual:/__uno.css'
     const plugin = {
       name: 'unocss:farm',
       enforce: 'pre',
@@ -51,18 +51,25 @@ export function unplugin<Theme extends object>(configOrPath?: WebpackPluginOptio
         return filter('', id) && !id.endsWith('.html') && !RESOLVED_ID_RE.test(id)
       },
       async transform(code, id) {
-        const result = await applyTransformers(ctx, code, id, 'pre')
+        this.addWatchFile(
+          VIRTUAL_MODULE_ID,
+        )
 
+        const result = await applyTransformers(ctx, code, id, 'pre')
         if (isCssId(id))
           return result
         if (result == null)
           tasks.push(extract(code, id))
         else
           tasks.push(extract(result.code, id))
+
         return result
       },
       // 这个钩子有问题 设置 enforce 的时候会导致报错 估计是解析有问题 某些操作被覆盖了
       resolveId(id) {
+        if (id === VIRTUAL_MODULE_ID) {
+          return id // Return the virtual id directly
+        }
         const entry = resolveId(id)
         if (entry === id)
           return
@@ -73,7 +80,8 @@ export function unplugin<Theme extends object>(configOrPath?: WebpackPluginOptio
             query = id.slice(queryIndex)
           entries.add(entry)
           // preserve the input query
-          return entry + query
+
+          return `virtual:${entry}${query}`
         }
       },
       loadInclude(id) {
@@ -84,6 +92,7 @@ export function unplugin<Theme extends object>(configOrPath?: WebpackPluginOptio
       load(id) {
         const layer = getLayer(id)
         const hash = hashes.get(id)
+
         if (layer)
           return (hash ? getHashPlaceholder(hash) : '') + getLayerPlaceholder(layer)
       },
@@ -93,9 +102,11 @@ export function unplugin<Theme extends object>(configOrPath?: WebpackPluginOptio
             resolvedPaths: ['.css'],
             moduleTypes: ['css'],
           },
+
           async executor(params) {
             await flushTasks()
             const result = await ctx.uno.generate(tokens, { minify: true })
+
             let code = params.content
             let escapeCss: ReturnType<typeof getCssEscaperForJsContent>
 
@@ -114,6 +125,7 @@ export function unplugin<Theme extends object>(configOrPath?: WebpackPluginOptio
 
               return escapeCss(css)
             })
+
             if (replaced) {
               return {
                 content: code,

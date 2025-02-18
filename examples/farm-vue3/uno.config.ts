@@ -16,7 +16,7 @@ export default defineConfig({
     presetUno(),
     presetAttributify(),
     presetIcons({
-      scale: 3,
+      scale: 1,
       cdn: 'https://esm.sh/',
     }),
   ],
